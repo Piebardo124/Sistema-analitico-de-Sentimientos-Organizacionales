@@ -1,11 +1,11 @@
 from pydantic import BaseModel, UUID4, Field
 from typing import List, Optional
-from datatime import datetime
+from datetime import datetime
 
 #Entrada
 class FeedbackCreate(BaseModel):
-    ##Input JSON requerido en POST /api/vi/nlp/analyze-feedback
-    textcontent: str = Field(..., min_length=5, description="Comentario Random")
+    ##Input JSON requerido en POST /api/v1/nlp/analyze-feedback
+    text_content: str = Field(..., min_length=5, description="Comentario Random")
     is_anonymous: bool = True
     department_id: Optional[int] = None
 

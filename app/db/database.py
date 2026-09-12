@@ -1,9 +1,9 @@
-import os
 from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+import os
 
-# Cambiar en produccion
-SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://plurione_user:secretpassword@localhost:5432/Sentiment_db")
+SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres:postgres@db:5432/plurione")
 
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

@@ -1,7 +1,7 @@
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DataTime, Float, Text
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime, Float, Text
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from sqlalchemy.dialects.postgresql import JSON, UUID
+from sqlalchemy.dialects.postgresql import JSON, UUID, JSONB
 import uuid
 
 from .database import Base
@@ -18,7 +18,7 @@ class Department(Base):
     ##Catalogo de departamentos de la empresa.
     __tablename__ = "departments"
 
-    id = Column(String, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), unique=True, nullable=False)
 
     feedbacks = relationship("FeedbackEntry", back_populates="department")
@@ -31,10 +31,10 @@ class FeedbackEntry(Base):
     department_id = Column(Integer, ForeignKey("departments.id"), nullable=True)
     content_text = Column(Text, nullable=True)
     is_anonymous = Column(Boolean, default=True)
-    created_at = Column(DataTime(timezone=True), server_default=func.now())
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     department = relationship("Department", back_populates="feedbacks")
-    analysis = relationship("SentimentAnalysis", back_populates="feedback_entry", uselist=False)
+    analysis = relationship("SentimentAnalysis", back_populates="feedback", uselist=False)
 
 class SentimentAnalysis(Base):
     ##Resultados del NLP
@@ -66,6 +66,6 @@ class Alert(Base):
     risk_level = Column(String, nullable=False)
     reason = Column(String, nullable=False)
     status = Column(String, default="Pendiente / OPEN")
-    created_at = Column(DataTime(timezone=True), server_default=func.now())
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 
