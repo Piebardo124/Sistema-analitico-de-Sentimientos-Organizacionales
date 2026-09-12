@@ -6,7 +6,7 @@ services:
     restart: always
     environment:
       POSTGRES_USER: plurione_user
-      POSTGRES_PASSWORD: secretpassword
+      POSTGRES_PASSWORD: contraseñaultrasecreta
       POSTGRES_DB: sentiment_db
     ports:
       - "5432:5432"
