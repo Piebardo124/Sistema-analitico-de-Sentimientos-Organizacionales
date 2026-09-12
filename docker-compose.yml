@@ -2,24 +2,24 @@ version: '3.8'
 
 services:
   db:
-      image: postgres:15-alpine
-      restart: always
-      environment:
-        POSTGRES_USER: plurione_user
-        POSTGRES_PASSWORD: secretpassword
-        POSTGRES_DB: sentiment_db
-      ports:
-        - "5432:5432"
-      volumes:
-        - postgres_data:/var/lib/postgresql/data
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: plurione_user
+      POSTGRES_PASSWORD: secretpassword
+      POSTGRES_DB: sentiment_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
   web:
-    built: .
+    build: .
     ports:
-      -"8000:8000"
+      - "8000:8000"
     volumes:
       - ./app:/app/app
-    enviroment:
+    environment:
       - DATABASE_URL=postgresql://plurione_user:secretpassword@db:5432/sentiment_db
     depends_on:
       - db
