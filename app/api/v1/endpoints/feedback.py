@@ -3,18 +3,24 @@ from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.db.models import FeedbackEntry
 from app.schemas.feedback import FeedbackCreate
+from app.services.sanitization import sanitize_text
 import uuid
+
 
 router = APIRouter()
 
 @router.post("/analyze-feedback")
 def analyze_feedback(feedback: FeedbackCreate, db: Session = Depends(get_db)):
     try:
+
+        # Limpieza de texto con posibles datos sensibles.
+
+        texto_limpio = sanitize_text(feedback.text_content)
         #Preparador de registros para tabla feedback_entries
         new_feedback = FeedbackEntry(
 
             id=uuid.uuid4(),
-            content_text=feedback.text_content,
+            content_text=texto_limpio,
             is_anonymous=True #Anonimo por defecto, Cambios en futuro.
         )
 
@@ -26,7 +32,7 @@ def analyze_feedback(feedback: FeedbackCreate, db: Session = Depends(get_db)):
         #Retorno de confirmacion
         return {
             "status": "success",
-            "message": "Feedback recibido y analizado correctamente",
+            "message": "Feedback recibido, sanitizado y guardado correctamente",
             "feedback_id": new_feedback.id
         }
     except Exception as e:
