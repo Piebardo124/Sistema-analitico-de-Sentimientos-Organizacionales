@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1.endpoints import feedback
 from app.db.database import engine
 from app.db import models
@@ -10,6 +11,14 @@ app = FastAPI(
     title="PluriOne Sentiment Analysis API",
     description="API RESTful para el analisis de sentimientos de comentarios de empleados",
     version="1.0.0"
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
 )
 
 @app.get("/")
