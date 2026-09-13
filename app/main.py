@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.api.v1.endpoints import feedback, auth
 from app.api.v1.endpoints import feedback
 from app.db.database import engine
 from app.db import models
@@ -25,4 +26,5 @@ app.add_middleware(
 def read_root():
     return {"status": "success", "message": "El middleware esta en funcion"}
 
+app.include_router(auth.router, prefix="/api/v1/auth", tags=["Autenticacion"])
 app.include_router(feedback.router, prefix="/api/v1/nlp", tags=["NLP Core"])
