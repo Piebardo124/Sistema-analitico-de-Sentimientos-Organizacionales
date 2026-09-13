@@ -5,13 +5,14 @@ from app.db.models import FeedbackEntry, SentimentAnalysis
 from app.schemas.feedback import FeedbackCreate
 from app.services.sanitization import sanitize_text
 from app.services.ai_engine import analyze_sentiment_with_ai
+from app.core.security import verify_token
 import uuid
 
 
 router = APIRouter()
 
 @router.post("/analyze-feedback")
-def analyze_feedback(feedback: FeedbackCreate, db: Session = Depends(get_db)):
+def analyze_feedback(feedback: FeedbackCreate, db: Session = Depends(get_db), current_user: dict = Depends(verify_token)):
     try:
 
         # Limpieza de texto con posibles datos sensibles.
