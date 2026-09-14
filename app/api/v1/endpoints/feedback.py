@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.db.database import get_db
-from app.db.models import FeedbackEntry, SentimentAnalysis
+from app.db.models import FeedbackEntry, SentimentAnalysis, Alert
 from app.schemas.feedback import FeedbackCreate
 from app.services.sanitization import sanitize_text
 from app.services.ai_engine import analyze_sentiment_with_ai
@@ -12,7 +12,11 @@ import uuid
 router = APIRouter()
 
 @router.post("/analyze-feedback")
-def analyze_feedback(feedback: FeedbackCreate, db: Session = Depends(get_db), current_user: dict = Depends(verify_token)):
+def analyze_feedback(
+    feedback: FeedbackCreate,
+    db: Session = Depends(get_db),
+    #current_user: dict = Depends(verify_token)
+):
     try:
 
         # Limpieza de texto con posibles datos sensibles.
@@ -43,18 +47,37 @@ def analyze_feedback(feedback: FeedbackCreate, db: Session = Depends(get_db), cu
         db.add(new_analysis)
         db.commit()
 
-        # Logica para responder a cliente con todo el analisis
+
+        # Funcion para Alertas automaticas (Dichosas banderas rojas)
+        
+        alerta_id = None
+        is_risk = ai_results["metadata_ai"].get("risk_burnout", False)
+
+        if is_risk:
+            nueva_alerta = Alert(
+                feedback_id=new_feedback.id,
+                risk_level="ALTO",
+                reason=ai_results["metadata_ai"].get("red_flag_reason", "Riesgo detectado por IA")
+            )
+            db.add(nueva_alerta)
+            db.commit()
+            db.refresh(nueva_alerta)
+
+            # En caso de riesgo, actualizador de varibale con el ID real de la base de datos
+            alerta_id = nueva_alerta.id
 
         return {
             "status": "success",
             "message": "Feedback recibido, sanitizado y analizado correctamente",
             "entry_id": new_feedback.id,
+            "alert_generated_id": alerta_id,
             "ai_analysis": {
                 "label": ai_results["sentiment_label"],
                 "polarity": ai_results["polarity_score"],
                 "details": ai_results["metadata_ai"]
             }
         }
+
         
     except Exception as e:
         db.rollback()

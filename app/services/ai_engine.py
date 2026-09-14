@@ -67,33 +67,33 @@ def analyze_sentiment_with_ai(text: str) -> dict:
         print (f"Error con Azure OpenAI: {e}")
         return _fallback_simulation(text)
 
-    def _fallback_simulation(text: str) -> dict:
-        """
-        Simulacion de respaldo en caso de no tener API Keys activas o fallas de red.
-        """
+def _fallback_simulation(text: str) -> dict:
+    """
+    Simulacion de respaldo en caso de no tener API Keys activas o fallas de red.
+    """
 
-        texto_lower = text.lower()
+    texto_lower = text.lower()
 
-        if any(palabra in texto_lower for palabra in ["mal", "pesado", "estrés", "renunciar", "problema"]):
-            return {
-                "polarity_score": -0.8,
-                "sentiment_label": "Negativo",
-                "metadata_ai": {
-                    "emotions": ["frustración", "cansancio"],
-                    "organizational_axes": ["Carga de trabajo"],
-                    "risk_burnout": True,
-                    "red_flag_reason": "Se detectó lenguaje asociado a estrés o renuncia"
-                }
-            }
-        
+    if any(palabra in texto_lower for palabra in ["mal", "pesado", "estrés", "renunciar", "problema"]):
         return {
-            "polarity_score": 0.8,
-            "sentiment_label": "Positivo",
+            "polarity_score": -0.8,
+            "sentiment_label": "Negativo",
             "metadata_ai": {
-                "emotions": ["motivación"],
-                "organizational_axes": ["Ambiente laboral"],
-                "risk_burnout": False,
-                "red_flag_reason": ""
+                "emotions": ["frustración", "cansancio"],
+                "organizational_axes": ["Carga de trabajo"],
+                "risk_burnout": True,
+                "red_flag_reason": "Se detectó lenguaje asociado a estrés o renuncia"
             }
         }
+        
+    return {
+        "polarity_score": 0.8,
+        "sentiment_label": "Positivo",
+        "metadata_ai": {
+            "emotions": ["motivación"],
+            "organizational_axes": ["Ambiente laboral"],
+            "risk_burnout": False,
+            "red_flag_reason": ""
+        }
+    }
             

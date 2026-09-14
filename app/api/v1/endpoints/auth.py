@@ -3,13 +3,13 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.db.models import User
-from app.core.security import create_acces_token
+from app.core.security import create_access_token
 
 router = APIRouter()
 
 @router.post("/login")
 def login_for_access_token(
-    form_data: OAuth2PassRequestForm = Depends(),
+    form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
 ):
     # Busqueda de usuario en la abse de datos por su correo

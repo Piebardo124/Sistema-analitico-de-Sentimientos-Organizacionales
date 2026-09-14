@@ -12,7 +12,7 @@ ACCESS_TOKEN_EXPIRE_HOURS = 8 # Cumlimiento de arquitectura.
 # Esquema de autenticacion para FastAPI
 oauth2_schema = OAuth2PasswordBearer(tokenUrl="api/v1/auth/login")
 
-def create_acces_token(data: dict):
+def create_access_token(data: dict):
     """Genera un token JWT con una expiracion de 8 horas"""
     to_encode = data.copy()
     expire = datetime.utcnow() + timedelta(hours=ACCESS_TOKEN_EXPIRE_HOURS)
@@ -20,7 +20,7 @@ def create_acces_token(data: dict):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-def varify_token(token: str = Depends(oauth2_schema)):
+def verify_token(token: str = Depends(oauth2_schema)):
     """Valida el token en cada peticion y extrae el rol del usuario"""
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_AUTHORIZED,
