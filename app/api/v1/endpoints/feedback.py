@@ -15,7 +15,7 @@ router = APIRouter()
 def analyze_feedback(
     feedback: FeedbackCreate,
     db: Session = Depends(get_db),
-    #current_user: dict = Depends(verify_token)
+    current_user: dict = Depends(verify_token)
 ):
     try:
 

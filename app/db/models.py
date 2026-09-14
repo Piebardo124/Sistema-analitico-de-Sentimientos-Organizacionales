@@ -13,6 +13,8 @@ class User(Base):
     user_id = Column(String, primary_key=True, index=True)
     email = Column(String(100), unique=True, nullable=False)
     role = Column(String, default="analyst")
+    # Temporal (Julio del futuro cambialo nmms)
+    hashed_password = Column(String, nullable=True)
 
 class Department(Base):
     ##Catalogo de departamentos de la empresa.
