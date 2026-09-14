@@ -10,7 +10,7 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_HOURS = 8 # Cumlimiento de arquitectura.
 
 # Esquema de autenticacion para FastAPI
-oauth2_schema = OAuth2PasswordBearer(tokenUrl="api/v1/auth/login")
+oauth2_schema = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 def create_access_token(data: dict):
     """Genera un token JWT con una expiracion de 8 horas"""
@@ -23,12 +23,12 @@ def create_access_token(data: dict):
 def verify_token(token: str = Depends(oauth2_schema)):
     """Valida el token en cada peticion y extrae el rol del usuario"""
     credentials_exception = HTTPException(
-        status_code=status.HTTP_401_AUTHORIZED,
+        status_code=status.HTTP_401_UNAUTHORIZED,
         detail="No se pudieron validar las credenciales",
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithm=[ALGORITHM])
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email: str = payload.get("sub")
         role: str = payload.get("role")
 
