@@ -45,6 +45,45 @@ def list_alerts(
     # Retorno de lista
     return alerts
 
+# Esquema de actualizacion
+class AlertUpdate(BaseModel):
+    status: str
+
+# Endpoint para actualizar estatus
+@router.patch("/{alert_id}", responde_model=AlertResponse)
+def update_alert_status(
+    alert_id: int,
+    alert_update: AlertUpdate,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(verify_token)
+):
+    """
+    Actualiza el estatus de un ticket de alerta.
+    Solo accesible para admin y hr.
+    """
+    # Validador de rol
+    rol_usuario = current_user.get("role")
+    if rol_usuario not in ["admin", "hr"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN
+            detail="Acceso denegado. Solo Recursos Humanos y Administradores pueden gestionar tickets."
+        )
+
+    db_alert = db.query(Alert).filter(Alert.id == alert_id).first()
+
+    # En caso de existir error, arrojar error 404
+    if not db_alert:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND
+            detail=f"Alerta con id {alert_id} no encontrada."
+        )
+
+    db_alert.status = alert_update.status
+    db.commit()
+    db.refresh(db_alert)
+
+    # Alerta actualizada
+    return db_alert
 
 
 
