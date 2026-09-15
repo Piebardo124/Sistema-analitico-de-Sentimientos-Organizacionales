@@ -50,7 +50,7 @@ class AlertUpdate(BaseModel):
     status: str
 
 # Endpoint para actualizar estatus
-@router.patch("/{alert_id}", responde_model=AlertResponse)
+@router.patch("/{alert_id}", response_model=AlertResponse)
 def update_alert_status(
     alert_id: int,
     alert_update: AlertUpdate,
