@@ -65,7 +65,7 @@ def update_alert_status(
     rol_usuario = current_user.get("role")
     if rol_usuario not in ["admin", "hr"]:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN
+            status_code=status.HTTP_403_FORBIDDEN,
             detail="Acceso denegado. Solo Recursos Humanos y Administradores pueden gestionar tickets."
         )
 
@@ -74,7 +74,7 @@ def update_alert_status(
     # En caso de existir error, arrojar error 404
     if not db_alert:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND
+            status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Alerta con id {alert_id} no encontrada."
         )
 
