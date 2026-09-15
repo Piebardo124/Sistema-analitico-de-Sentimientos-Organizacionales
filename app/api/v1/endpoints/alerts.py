@@ -1,6 +1,6 @@
 import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlaclchemy.orm import Session
+from sqlalchemy.orm import Session
 from typing import List
 from pydantic import BaseModel
 from app.db.database import get_db
@@ -11,15 +11,17 @@ router = APIRouter()
 
 # Esquema de salida 
 class AlertResponse(BaseModel):
-    alert_id: uuid.UUID
-    analysis_id: uuid.UUID
-    severity_level: str
+    id: int
+    feedback_id: uuid.UUID
+    risk_level: str
+    reason: str
     status: str
+
     class Config:
         from_attributes = True
 
 # EndPoit
-@router-get("/", response_model=List[AlertResponse])
+@router.get("/", response_model=List[AlertResponse])
 def list_alerts(
     db: Session = Depends(get_db),
     current_user: dict = Depends(verify_token) # Token valido
