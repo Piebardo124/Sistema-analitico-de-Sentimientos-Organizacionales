@@ -3,66 +3,114 @@ import axios from 'axios';
 
 function Buzon() {
   const [texto, setTexto] = useState('');
-  const [analisis, setAnalisis] = useState(null);
+  const [esAnonimo, setEsAnonimo] = useState(true);
+  const [departamentoId, setDepartamentoId] = useState('');
   const [cargando, setCargando] = useState(null);
+  const [enviadoExito, setEnviadoExito] = useState(false);
+
+  // Lista estatica de departamentos
+  const departamentos = [
+    {id: 1, nombre: 'Recursos Humanos'},
+    {id: 2, nombre: 'Desarrollo de Software'},
+    {id: 3, nombre: 'Ventas y Marketing'},
+    {id: 4, nombre: 'Soporte Tecnico'},
+  ];
 
   const manejarEnvio = async (e) => {
-    e.preventDefault(); // Evita que la pagina recargue
+    e.preventDefault();
     setCargando(true);
     setAnalisis(null);
 
     try {
       // Logica de React para llamar a FastAPI en Docker
       const respuetsa = await axios.post('http://localhost:8000/api/v1/nlp/analyze-feedback', {
-        text_content: texto
+        text_content: texto,
+        is_anonymous: esAnonimo,
+        department_id: departamentoId ? parseInt(departamentoId) : null
       });
 
-      // Logica de guardado de respuesta para mostrar en pantalla
-      setAnalisis(respuetsa.data.ai_analysis);
+      setTexto('');
+      setDepartamentoId('');
+      setEsAnonimo(true);
+      setEnviadoExito(true);
+
+      // Ocultar mensaje despues de 5 segundos
+      setTimeout(() => setEnviadoExito(false), 5000)
+
     } catch (error) {
       console.error("Error al enviar:", error);
-      alert("Hubo un error de conexion, revisar Consola (F12)")
+      alert("Hubo un error de conexion, Por favor, intenta de nuevo.")
     }
-
     setCargando(false);
   };
 
-  return(
-    <div style={{ maxWidth: '600px', margin: '50px auto', fontFamily: 'sans-serif', textAlign: 'center' }}>
-      <h1>PluriOne - Buzón Inteligente</h1>
-      <p>Escribe tu comentario corporativo y la IA lo analizará.</p>
+  return (
+    <div style={{ maxWidth: '600px', margin: '50px auto', fontFamily: 'sans-serif', textAlign: 'center', backgroundColor: '#ffffff', padding: '30px', borderRadius: '10px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+      <h1 style={{ color: '#1e293b' }}>PluriOne - Buzon Organizacional</h1>
+      <p style={{ color: '#64748b', marginBottom: '30px' }}>Tu voz es importante. Cuentanos como te sientes en tu entorno de trabajo.</p>
 
-      <form onSubmit={manejarEnvio} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-        <textarea
-          rows="5"
-          placeholder="Ej. El ambiente es muy pesado y el jefe me grita. Mi número es 6621998877..."
-          value={texto}
-          onChange={(e) => setTexto(e.target.value)}
-          style={{ padding: '10px', fontSize: '16px', borderRadius: '5px' }}
-          required
-        />
+      {enviadoExito && (
+        <div style={{ backgroundColor: '#d1fae5', color: '#065f46', padding: '15px', borderRadius: '5px', marginBottom: '20px', fontWeight: 'bold' }}>
+          Gracias por tu retroalimentación. Ha sido registrada de forma segura.
+        </div>
+      )}
+
+      <form onSubmit={manejarEnvio} style={{ display: 'flex', flexDirection: 'column', gap: '20px', textAlign: 'left' }}>
+        
+        {/* Selector de Departamento */}
+        <div>
+          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#334155' }}>Area o Departamento (Opcional)</label>
+          <select 
+            value={departamentoId} 
+            onChange={(e) => setDepartamentoId(e.target.value)}
+            style={{ width: '100%', padding: '10px', fontSize: '16px', borderRadius: '5px', border: '1px solid #cbd5e1' }}
+          >
+            <option value="">Selecciona tu área...</option>
+            {departamentos.map(dep => (
+              <option key={dep.id} value={dep.id}>{dep.nombre}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Textarea principal */}
+        <div>
+          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#334155' }}>Tus comentarios</label>
+          <textarea
+            rows="6"
+            placeholder="Ej. Las nuevas herramientas nos han ayudado mucho, pero la carga de trabajo este mes ha sido muy pesada..."
+            value={texto}
+            onChange={(e) => setTexto(e.target.value)}
+            style={{ width: '100%', padding: '10px', fontSize: '16px', borderRadius: '5px', border: '1px solid #cbd5e1', resize: 'vertical', boxSizing: 'border-box' }}
+            required
+            minLength="5"
+          />
+        </div>
+
+        {/* Checkbox de Privacidad */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <input 
+            type="checkbox" 
+            id="anonimoCheck"
+            checked={esAnonimo}
+            onChange={(e) => setEsAnonimo(e.target.checked)}
+            style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+          />
+          <label htmlFor="anonimoCheck" style={{ cursor: 'pointer', color: '#475569', fontSize: '15px' }}>
+            Enviar de forma totalmente anónima (Ocultar mi identidad)
+          </label>
+        </div>
+
         <button
           type="submit"
           disabled={cargando}
-          style={{ 
-            padding: '12px', fontSize: '16px', backgroundColor: '#2563eb', 
-            color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' 
+          style={{
+            marginTop: '10px', padding: '15px', fontSize: '16px', fontWeight: 'bold', backgroundColor: cargando ? '#94a3b8' : '#2563eb',
+            color: 'white', border: 'none', borderRadius: '5px', cursor: cargando ? 'not-allowed' : 'pointer', transition: 'background-color 0.3s'
           }}
         >
-          {cargando ? 'Analizando con IA...' : 'Enviar Comentario'}
+          {cargando ? 'Procesando y encriptando datos...' : 'Enviar Retroalimentación'}
         </button>
       </form>
-
-      {/* Esta sección solo aparece si la IA ya nos respondió */}
-      {analisis && (
-        <div style={{ marginTop: '30px', padding: '20px', border: '1px solid #ccc', borderRadius: '8px', backgroundColor: '#f8fafc', textAlign: 'left' }}>
-          <h3 style={{ marginTop: '0', color: '#0f172a' }}>Resultado del Análisis:</h3>
-          <p><strong>Sentimiento:</strong> {analisis.label}</p>
-          <p><strong>Score de Polaridad:</strong> {analisis.polarity}</p>
-          <p><strong>Emoción principal:</strong> {analisis.details.emocion}</p>
-          <p><strong>Riesgo de Burnout:</strong> {analisis.details.riesgo_burnout ? "ALTO" : "Bajo"}</p>
-        </div>
-      )}
     </div>
   );
 }
