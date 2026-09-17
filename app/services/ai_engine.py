@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
-from langchain_openai import AzureChatOpenAI
+# from langchain_openai import AzureChatOpenAI
+from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
 from typing import List
@@ -12,7 +13,7 @@ load_dotenv()
 class AIAnalysisResult(BaseModel):
     polarity_score: float = Field (..., description="Puntuacion de -1.0 (muy negativo) a 1.0 (muy positivo)")
     sentiment_label: str = Field(..., description = "Positivo, Negativo o Neutral")
-    emotionsdetected: List[str] = Field(..., description = "Lista de emociones detectadas, ej: frustración, alegría")
+    emotions_detected: List[str] = Field(..., description = "Lista de emociones detectadas, ej: frustración, alegría")
     organizational_axes: List[str] = Field(..., description = "Ejes afectados. Solo usa: Liderazgo y management, Carga de trabajo, Ambiente laboral, Compensaciones, Herramientas")
     risk_burnout: bool = Field(..., description="True si hay indicios de burnout, estrés extremo, acoso o renuncia")
     red_flag_reason: str = Field(default="", description="Breve justificación si risk_burnout es True, de lo contrario vacío")
@@ -30,14 +31,16 @@ def analyze_sentiment_with_ai(text: str) -> dict:
     if not os.getenv("AZURE_OPENAI_API_KEY"):
         return _fallback_simulation(text)
 
+    print(f"DEBUG -> Endpoint: {os.getenv('AZURE_OPENAI_ENDPOINT')} | Deployment: {os.getenv('AZURE_OPENAI_DEPLOYMENT_NAME')}")
     try:
         # Configuracion del LLM
-        llm = AzureChatOpenAI(
-            azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+        llm = ChatOpenAI(
+            base_url=os.getenv("AZURE_OPENAI_ENDPOINT"),
             api_key=os.getenv("AZURE_OPENAI_API_KEY"),
-            api_version=os.getenv("OPENAI_API_VERSION", "2023-05-15"),
-            azure_deployment=os.getenv("AZURE_OPENAI_DEPOYMENT_NAME"),
-            temperature=0.0 # Maxima precision
+            model=os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME", "gpt-plurione"),
+            temperature=0.0,  # Máxima precisión
+            timeout=10.0,
+            max_retries=0
         )
 
         # Obligando para que el modelo respete la estructura de Pydantic
@@ -54,9 +57,24 @@ def analyze_sentiment_with_ai(text: str) -> dict:
             ("human", "Analiza el siguiente comentario del empleado:\n\n{texto_empleado}")
         ])
 
+        chain = prompt | structured_llm
+        result = chain.invoke({"texto_empleado": text})
+
+        # Mapeado de salida para encajar Endpoint de FastAPI
+        return {
+            "polarity_score": result.polarity_score,
+            "sentiment_label": result.sentiment_label,
+            "metadata_ai": {
+                "emotions": result.emotions_detected,
+                "organizational_axes": result.organizational_axes,
+                "risk_burnout": result.risk_burnout,
+                "red_flag_reason": result.red_flag_reason
+            }
+        }
+
     except Exception as e:
         print (f" Error conectando con Azure OpenAI: {e}")
-        return _fallback_simulation
+        return _fallback_simulation(text)
 
 def _fallback_simulation(text: str) -> dict:
     """
