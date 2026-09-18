@@ -6,6 +6,7 @@ from app.schemas.feedback import FeedbackCreate
 from app.services.sanitization import sanitize_text
 from app.services.ai_engine import analyze_sentiment_with_ai
 from app.core.security import verify_token
+from app.services.email_service import send_alert_email
 import uuid
 import csv
 import io
@@ -17,6 +18,7 @@ router = APIRouter()
 @router.post("/analyze-feedback")
 def analyze_feedback(
     feedback: FeedbackCreate,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: dict = Depends(verify_token)
 ):
@@ -78,6 +80,12 @@ def analyze_feedback(
 
             # En caso de riesgo, actualizador de varibale con el ID real de la base de datos
             alerta_id = nueva_alerta.id
+
+            background_tasks.add_task(
+                send_alert_email,
+                alert_id=alerta_id,
+                reason=nueva_alerta.reason
+            )
 
         return {
             "status": "success",
