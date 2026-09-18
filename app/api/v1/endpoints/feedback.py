@@ -4,7 +4,8 @@ from app.db.database import get_db, SessionLocal
 from app.db.models import FeedbackEntry, SentimentAnalysis, Alert, KeyPhrase
 from app.schemas.feedback import FeedbackCreate
 from app.services.sanitization import sanitize_text
-from app.services.ai_engine import analyze_sentiment_with_ai
+from app.services.ai_engine import analyze_sentiment_with_ai, generate_executive_summary
+from typing import Optional
 from app.core.security import verify_token
 from app.services.email_service import send_alert_email
 import uuid
@@ -218,3 +219,48 @@ async def upload_feeback_csv(
 
     except UnicodeDecodeError:
         raise HTTPException(status_code=400, detail="El archivo CSV debe estar codificado en UTF-8.")
+
+@router.get("/summary")
+def get_executive_summary(
+    department_id: Optional[int] = None,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(verify_token)
+):
+    """
+    Genera un resumen ejecutivo mediante IA de los comentarios registrados.
+    Permite filtrar por departamento
+    """
+
+    # Validacion de rol (Solo Directivos o RH)
+    rol_usuario = current_user.get("role")
+    if rol_usuario not in ["admin", "hr", "executive"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Acceso denegado. Solo roles directivos o RH pueden generar resúmenes."
+        )
+
+    # COnsulta a la base de datos
+    query = db.query(FeedbackEntry)
+    if department_id:
+        query = query.filter(FeedbackEntry.department_id == department_id)
+
+    comentarios = query.all()
+
+    if not comentarios:
+        return {
+            "status": "success",
+            "executive_summary": "No hay comentarios registrados para el periodo o departamento seleccionado.",
+            "total_analyzed": 0
+        }
+
+    # Concatenado de todos los textos en un bloque con viñetas
+    textos_concatenados = "\n- ".join([c.content_text for c in comentarios if c.content_text])
+
+    # Llamado a Azure OpenAI
+    resumen_ia = generate_executive_summary(textos_concatenados)
+
+    return {
+        "status": "success",
+        "total_analyzed": len(comentarios),
+        "executive_summary": resumen_ia
+    }

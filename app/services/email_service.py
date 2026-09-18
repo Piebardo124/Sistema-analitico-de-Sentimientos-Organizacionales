@@ -5,7 +5,7 @@ import smtplib
 
 def send_alert_email(alert_id: int, reason: str, hr_email: str = "rh@plurione.com"):
     """ Envio correo de alerta critica a recursos Humanos. """
-    sender_email = os.getenv("SMTP_EMAIL", "CorreRandom@gmail.com")
+    sender_email = os.getenv("SMTP_EMAIL", "CorreoRandom@gmail.com")
     sender_password = os.getenv("SMTP_PASSWORD", "contraseña_random")
 
     if sender_email == "CorreoRandom@gmail.com":

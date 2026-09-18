@@ -109,4 +109,37 @@ def _fallback_simulation(text: str) -> dict:
             "red_flag_reason": ""
         }
     }
+
+def generate_executive_summary(text_batch: str) -> str:
+    """
+    Genera un resumen ejecutivo cualitativo a partir de multiples comentarios.
+    """
+    if not os.getevn("AZURE_OPENAI_API_KEY "):
+        return "Simulador: El clima laboral muestra áreas de oportunidad en carga de trabajo, pero buena motivación general."
+
+    try:
+        llm = ChatOpenAI(
+            base_url=os.getenv("AZURE_OPENAI_ENDPOINT"),
+            api_key=os.getenv("AZURE_OPENAI_API_KEY"),
+            model=os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME", "gpt-plurione"),
+            temperature=0.3, 
+            max_retries=0
+        )
+
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", "Eres un Consultor Ejecutivo de Recursos Humanos en PluriOne S.A. de C.V. "
+                       "Tu tarea es leer una lista de comentarios anónimos de empleados y redactar un "
+                       "resumen ejecutivo cualitativo de un solo párrafo. Destaca el sentir general, "
+                       "los puntos fuertes y las alertas críticas si las hay."),
+            ("human", "Comentarios de los empleados:\n\n{comentarios}")
+        ])
+
+        chain = prompt | llm
+        result = chain.invoke({"comentarios": text_batch})
+
+        return result.content
+    except Exception as e:
+        print(f"Error generando resumen: {e}")
+        return "No se pudo generar el resumen debido a un error de conexión con la IA."
+    
             
