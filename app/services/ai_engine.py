@@ -89,6 +89,7 @@ def _fallback_simulation(text: str) -> dict:
         return {
             "polarity_score": -0.8,
             "sentiment_label": "Negativo",
+            "key_phrases": ["fallback error"],
             "metadata_ai": {
                 "emotions": ["frustración", "cansancio"],
                 "organizational_axes": ["Carga de trabajo"],
@@ -100,6 +101,7 @@ def _fallback_simulation(text: str) -> dict:
     return {
         "polarity_score": 0.8,
         "sentiment_label": "Positivo",
+        "key_phrases": ["fallback error"],
         "metadata_ai": {
             "emotions": ["motivación"],
             "organizational_axes": ["Ambiente laboral"],

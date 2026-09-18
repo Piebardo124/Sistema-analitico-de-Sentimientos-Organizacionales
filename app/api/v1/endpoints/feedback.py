@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, BackgroundTasks, status
 from sqlalchemy.orm import Session
 from app.db.database import get_db, SessionLocal
-from app.db.models import FeedbackEntry, SentimentAnalysis, Alert
+from app.db.models import FeedbackEntry, SentimentAnalysis, Alert, KeyPhrase
 from app.schemas.feedback import FeedbackCreate
 from app.services.sanitization import sanitize_text
 from app.services.ai_engine import analyze_sentiment_with_ai
@@ -49,10 +49,20 @@ def analyze_feedback(
         )
         db.add(new_analysis)
         db.commit()
+        db.refresh(new_analysis)
+
+        # Guardado de frases clave en su propia tabla
+        if "key_phrases" in ai_results:
+            for phrase in ai_results["key_phrases"]:
+                nueva_frase = KeyPhrase(
+                    analysis_id=new_analysis.id,
+                    phrase=phrase
+                )
+                db.add(nueva_frase)
+            db.commit()
 
 
         # Funcion para Alertas automaticas (Dichosas banderas rojas)
-        
         alerta_id = None
         is_risk = ai_results["metadata_ai"].get("risk_burnout", False)
 
@@ -77,6 +87,7 @@ def analyze_feedback(
             "ai_analysis": {
                 "label": ai_results["sentiment_label"],
                 "polarity": ai_results["polarity_score"],
+                "key_phrases": ai_results.get("key_phrases", []),
                 "details": ai_results["metadata_ai"]
             }
         }
@@ -156,7 +167,7 @@ def process_csv_background(file_content: str):
                 db.rollback()
                 print(f"Error en registro {index}: {row_error}")
                 traceback.print_exc()
-                continue  # Aquí sí está dentro del for, por lo que pasa limpiamente al siguiente registro
+                continue 
 
     except Exception as e:
         print(f"Error general en procesamiento masivo en segundo plano: {e}")

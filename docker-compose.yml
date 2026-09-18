@@ -19,6 +19,8 @@ services:
       - "8000:8000"
     volumes:
       - ./app:/app/app
+    env_file:
+      - ./.env
     environment:
       - DATABASE_URL=postgresql://plurione_user:contrasenaultrasecreta@db:5432/sentiment_db
     depends_on:
