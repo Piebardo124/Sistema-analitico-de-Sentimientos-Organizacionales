@@ -3,9 +3,15 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
 function Dashboard() {
+  // Estados para la bandeja de alertas
   const [alertas, setAlertas] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
+
+  // Estado para la subida de archivos CSV
+  const [archivoCsv, setArchivoCsv] = useState(null);
+  const [subiendoCsv, setSubiendoCsv] = useState(false);
+  const [mensajeCsv, setMensajeCsv] = useState('');
 
   const navigate = useNavigate();
 
@@ -23,9 +29,7 @@ function Dashboard() {
 
         // Peticion GET a backend envaindo el token en Heades
         const respuesta = await axios.get('http://localhost:8000/api/v1/alerts', {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
+          headers: { Authorization: `Bearer ${token}` }
         });
 
         setAlertas(respuesta.data);
@@ -74,6 +78,38 @@ function Dashboard() {
     }
   };
 
+  // Manejar archivos de subida CSV
+  const manejarSubidaCsv = async (e) => {
+    e.preventDefault();
+    if (!archivoCsv) return;
+
+    setSubiendoCsv(true);
+    setMensajeCsv('');
+
+    const formData = new FormData();
+    formData.append('file', archivoCsv);
+
+    try {
+      const token = localStorage.getItem('token');
+      const respuesta = await axios.post('http://localhost:8000/api/v1/nlp/upload-csv', formData, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      setMensajeCsv(` ${respuesta.data.message}`);
+      setArchivoCsv(null);
+
+      // Reseteo campo de archivo en HTML
+      document.getElementById('csvInput').value = '';
+    } catch (err) {
+      console.error("Error al subir CSV:", err);
+      const errorDetail = err.response?.data?.detail || "Error desconocido al procesar el archivo.";
+      setMensajeCsv(`Error: ${errorDetail}`);
+    }
+  }
+
   return (
     <div style={{ maxWidth: '800px', margin: '50px auto', fontFamily: 'sans-serif' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -86,6 +122,38 @@ function Dashboard() {
         </button>
       </div>
       <p style={{ color: '#64748b' }}>Monitoreo de incidencias y riesgo de burnout.</p>
+
+      {/* Panel de Carga Masiva (CSV) */}
+      <div style={{ backgroundColor: '#f8fafc', border: '1px solid #cbd5e1', padding: '20px', borderRadius: '8px', marginBottom: '25px' }}>
+        <h4 style={{ marginTop: '0', color: '#334155' }}>Carga Masiva de Comentarios Históricos</h4>
+        <form onSubmit={manejarSubidaCsv} style={{ display: 'flex', gap: '15px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <input 
+            id="csvInput"
+            type="file" 
+            accept=".csv"
+            onChange={(e) => setArchivoCsv(e.target.files[0])}
+            style={{ padding: '8px', border: '1px solid #cbd5e1', borderRadius: '5px', backgroundColor: '#ffffff', cursor: 'pointer' }}
+          />
+          <button 
+            type="submit" 
+            disabled={subiendoCsv || !archivoCsv}
+            style={{ 
+              padding: '10px 15px', 
+              backgroundColor: subiendoCsv ? '#94a3b8' : '#10b981', 
+              color: 'white', border: 'none', borderRadius: '5px', 
+              cursor: subiendoCsv || !archivoCsv ? 'not-allowed' : 'pointer',
+              fontWeight: 'bold'
+            }}
+          >
+            {subiendoCsv ? 'Enviando al Motor IA...' : 'Procesar CSV en Segundo Plano'}
+          </button>
+        </form>
+        {mensajeCsv && (
+          <p style={{ marginTop: '15px', marginBottom: '0', fontWeight: '500', color: mensajeCsv.includes('✅') ? '#059669' : '#dc2626' }}>
+            {mensajeCsv}
+          </p>
+        )}
+      </div>
 
       {/* Condicionales de carga y error */}
       {cargando ? (
