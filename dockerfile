@@ -3,7 +3,7 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # Cancelador de creaciond de archivos .pyc
-ENV PYTHONDONTWHRITEBYCODE 1
+ENV PYTHONDONTWHRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
 COPY requirements.txt .

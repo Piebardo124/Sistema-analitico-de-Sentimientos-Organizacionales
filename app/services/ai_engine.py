@@ -17,7 +17,8 @@ class AIAnalysisResult(BaseModel):
     organizational_axes: List[str] = Field(..., description = "Ejes afectados. Solo usa: Liderazgo y management, Carga de trabajo, Ambiente laboral, Compensaciones, Herramientas")
     risk_burnout: bool = Field(..., description="True si hay indicios de burnout, estrés extremo, acoso o renuncia")
     red_flag_reason: str = Field(default="", description="Breve justificación si risk_burnout es True, de lo contrario vacío")
-
+    key_phrases: List[str] = Field(..., description="Lista de 3 a 5 conceptos o frases clave (ej: 'comunicación nula', 'líder exige tiempos irreales')")
+    
 
 
 
@@ -64,6 +65,7 @@ def analyze_sentiment_with_ai(text: str) -> dict:
         return {
             "polarity_score": result.polarity_score,
             "sentiment_label": result.sentiment_label,
+            "key_phrases": result.key_phrases,
             "metadata_ai": {
                 "emotions": result.emotions_detected,
                 "organizational_axes": result.organizational_axes,
